@@ -1,20 +1,18 @@
 package SimpleStringService
 
 import (
-	//"context"
-	//"encoding/json"
-	//"errors"
-	"log"
+	"os"
 	"net/http"
-	//"strings"
-
-	//"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 
 func RunService() {
-	svc := stringService{}
+	logger := log.NewLogfmtLogger(os.Stderr)
+	var svc StringService
+	svc = stringService{}
+	svc = loggingMiddleware{logger, svc}
 
 	uppercaseHandler := httptransport.NewServer(
 		makeUppercaseEndpoint(svc),
@@ -41,10 +39,10 @@ func RunService() {
 	)
 
 
-
 	http.Handle("/uppercase", uppercaseHandler)
 	http.Handle("/lowercase", lowercaseHandler)
 	http.Handle("/cutsub", cutsubHandler)
 	http.Handle("/count", countHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	logger.Log("msg", "HTTP", "addr", ":8080")
+	logger.Log("err", http.ListenAndServe(":8080", nil))
 }
